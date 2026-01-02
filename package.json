@@ -1,0 +1,64 @@
+{
+  "name": "@outboundiq/core",
+  "version": "0.1.0",
+  "description": "OutboundIQ JavaScript SDK - Track and monitor your outbound API calls",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.mjs",
+      "require": "./dist/node.js"
+    },
+    "./edge": {
+      "types": "./dist/edge.d.ts",
+      "import": "./dist/edge.mjs",
+      "require": "./dist/edge.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "outboundiq",
+    "api",
+    "monitoring",
+    "observability",
+    "http",
+    "fetch",
+    "axios",
+    "tracking"
+  ],
+  "author": "OutboundIQ",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outboundiq-hq/outboundiq-js.git"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {},
+  "dependencies": {}
+}
+
