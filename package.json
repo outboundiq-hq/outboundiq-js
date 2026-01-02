@@ -22,8 +22,12 @@
       "require": "./dist/edge.js"
     }
   },
+  "bin": {
+    "outboundiq-test": "./bin/outboundiq-test.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "scripts": {
     "build": "tsup",
