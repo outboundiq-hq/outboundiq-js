@@ -393,6 +393,122 @@ export class OutboundIQClient {
   getConfig(): Readonly<OutboundIQConfig> {
     return { ...this.config };
   }
+
+  /**
+   * Get the base URL (endpoint without /metric)
+   */
+  getBaseUrl(): string {
+    return this.config.endpoint.replace('/metric', '');
+  }
+
+  /**
+   * Ping the OutboundIQ API to verify the API key and get project info
+   */
+  async ping(): Promise<PingResponse | null> {
+    const url = this.getBaseUrl() + '/ping';
+    
+    try {
+      if (this.runtime === 'node' && nativeHttpsRequest) {
+        return await this.pingWithNativeHttp(url);
+      }
+      
+      // Fallback to fetch
+      if (!originalFetch) {
+        throw new Error('fetch is not available');
+      }
+
+      const response = await originalFetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      this.logger.error('Ping failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Ping using native Node.js https
+   */
+  private pingWithNativeHttp(url: string): Promise<PingResponse | null> {
+    return new Promise((resolve) => {
+      const parsedUrl = new URL(url);
+      const isHttps = parsedUrl.protocol === 'https:';
+      const requestFn = isHttps ? nativeHttpsRequest : nativeHttpRequest;
+      
+      if (!requestFn) {
+        resolve(null);
+        return;
+      }
+
+      const options = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port || (isHttps ? 443 : 80),
+        path: parsedUrl.pathname + parsedUrl.search,
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Accept': 'application/json',
+        },
+        timeout: this.config.timeout,
+      };
+
+      const req = requestFn(options, (res: any) => {
+        let data = '';
+        res.on('data', (chunk: string) => { data += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(data));
+            } catch {
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
+        });
+      });
+
+      req.on('error', () => resolve(null));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(null);
+      });
+      req.end();
+    });
+  }
+}
+
+/**
+ * Ping response from OutboundIQ API
+ */
+export interface PingResponse {
+  status: boolean;
+  message: string;
+  data: {
+    project: {
+      name: string;
+      slug: string;
+    };
+    team: {
+      name: string;
+    };
+    plan: string;
+    usage: {
+      api_calls: number;
+      limit: number;
+    };
+    timestamp: string;
+  } | null;
 }
 
 // Singleton instance for easy access
@@ -452,5 +568,16 @@ export function flush(): void {
 export async function shutdown(): Promise<void> {
   await instance?.shutdown();
   instance = null;
+}
+
+/**
+ * Ping the OutboundIQ API to verify the API key
+ */
+export async function ping(): Promise<PingResponse | null> {
+  if (!instance) {
+    console.warn('[OutboundIQ] Client not initialized. Call init() first.');
+    return null;
+  }
+  return instance.ping();
 }
 
