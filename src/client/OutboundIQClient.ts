@@ -101,6 +101,20 @@ export class OutboundIQClient {
   }
 
   /**
+   * Get the configured API key
+   */
+  getApiKey(): string {
+    return this.config.apiKey;
+  }
+
+  /**
+   * Get the configured endpoint
+   */
+  getEndpoint(): string {
+    return this.config.endpoint;
+  }
+
+  /**
    * Start the automatic flush interval
    */
   private startFlushInterval(): void {

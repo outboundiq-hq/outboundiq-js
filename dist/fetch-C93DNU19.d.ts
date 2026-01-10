@@ -165,6 +165,14 @@ declare class OutboundIQClient {
      */
     private detectRuntime;
     /**
+     * Get the configured API key
+     */
+    getApiKey(): string;
+    /**
+     * Get the configured endpoint
+     */
+    getEndpoint(): string;
+    /**
      * Start the automatic flush interval
      */
     private startFlushInterval;
@@ -227,6 +235,40 @@ declare class OutboundIQClient {
      * Get configuration
      */
     getConfig(): Readonly<OutboundIQConfig>;
+    /**
+     * Get the base URL (endpoint without /metric)
+     */
+    getBaseUrl(): string;
+    /**
+     * Ping the OutboundIQ API to verify the API key and get project info
+     */
+    ping(): Promise<PingResponse | null>;
+    /**
+     * Ping using native Node.js https
+     */
+    private pingWithNativeHttp;
+}
+/**
+ * Ping response from OutboundIQ API
+ */
+interface PingResponse {
+    status: boolean;
+    message: string;
+    data: {
+        project: {
+            name: string;
+            slug: string;
+        };
+        team: {
+            name: string;
+        };
+        plan: string;
+        usage: {
+            api_calls: number;
+            limit: number;
+        };
+        timestamp: string;
+    } | null;
 }
 /**
  * Initialize the OutboundIQ client

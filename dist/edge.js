@@ -82,6 +82,7 @@ function createLogger(debug) {
 
 // src/client/OutboundIQClient.ts
 var SDK_VERSION = "0.1.0";
+var nativeHttpsRequest = null;
 var originalFetch = typeof globalThis.fetch === "function" ? globalThis.fetch.bind(globalThis) : null;
 var OutboundIQClient = class {
   constructor(config) {
@@ -121,6 +122,18 @@ var OutboundIQClient = class {
     } else {
       this.runtime = "node";
     }
+  }
+  /**
+   * Get the configured API key
+   */
+  getApiKey() {
+    return this.config.apiKey;
+  }
+  /**
+   * Get the configured endpoint
+   */
+  getEndpoint() {
+    return this.config.endpoint;
   }
   /**
    * Start the automatic flush interval
@@ -352,6 +365,51 @@ var OutboundIQClient = class {
    */
   getConfig() {
     return { ...this.config };
+  }
+  /**
+   * Get the base URL (endpoint without /metric)
+   */
+  getBaseUrl() {
+    return this.config.endpoint.replace("/metric", "");
+  }
+  /**
+   * Ping the OutboundIQ API to verify the API key and get project info
+   */
+  async ping() {
+    const url = this.getBaseUrl() + "/ping";
+    try {
+      if (this.runtime === "node" && nativeHttpsRequest) ;
+      if (!originalFetch) {
+        throw new Error("fetch is not available");
+      }
+      const response = await originalFetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${this.config.apiKey}`,
+          "Accept": "application/json"
+        }
+      });
+      if (!response.ok) {
+        return null;
+      }
+      return await response.json();
+    } catch (error) {
+      this.logger.error("Ping failed:", error);
+      return null;
+    }
+  }
+  /**
+   * Ping using native Node.js https
+   */
+  pingWithNativeHttp(url) {
+    return new Promise((resolve) => {
+      const parsedUrl = new URL(url);
+      parsedUrl.protocol === "https:";
+      {
+        resolve(null);
+        return;
+      }
+    });
   }
 };
 var instance = null;

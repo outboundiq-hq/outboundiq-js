@@ -55,3 +55,14 @@ export {
 // Interceptor exports (for advanced usage)
 export { patchFetch, unpatchFetch, setFetchUserContextResolver } from './interceptors/fetch';
 
+// API Intelligence exports
+export {
+  recommend,
+  providerStatus,
+  endpointStatus,
+  type RecommendationResult,
+  type ProviderStatusResult,
+  type EndpointStatusResult,
+  type IntelligenceOptions,
+} from './intelligence';
+

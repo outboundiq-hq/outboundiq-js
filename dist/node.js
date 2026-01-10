@@ -155,6 +155,18 @@ var OutboundIQClient = class {
     }
   }
   /**
+   * Get the configured API key
+   */
+  getApiKey() {
+    return this.config.apiKey;
+  }
+  /**
+   * Get the configured endpoint
+   */
+  getEndpoint() {
+    return this.config.endpoint;
+  }
+  /**
    * Start the automatic flush interval
    */
   startFlushInterval() {
@@ -390,6 +402,88 @@ var OutboundIQClient = class {
   getConfig() {
     return { ...this.config };
   }
+  /**
+   * Get the base URL (endpoint without /metric)
+   */
+  getBaseUrl() {
+    return this.config.endpoint.replace("/metric", "");
+  }
+  /**
+   * Ping the OutboundIQ API to verify the API key and get project info
+   */
+  async ping() {
+    const url = this.getBaseUrl() + "/ping";
+    try {
+      if (this.runtime === "node" && nativeHttpsRequest) {
+        return await this.pingWithNativeHttp(url);
+      }
+      if (!originalFetch) {
+        throw new Error("fetch is not available");
+      }
+      const response = await originalFetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${this.config.apiKey}`,
+          "Accept": "application/json"
+        }
+      });
+      if (!response.ok) {
+        return null;
+      }
+      return await response.json();
+    } catch (error) {
+      this.logger.error("Ping failed:", error);
+      return null;
+    }
+  }
+  /**
+   * Ping using native Node.js https
+   */
+  pingWithNativeHttp(url) {
+    return new Promise((resolve) => {
+      const parsedUrl = new URL(url);
+      const isHttps = parsedUrl.protocol === "https:";
+      const requestFn = isHttps ? nativeHttpsRequest : nativeHttpRequest;
+      if (!requestFn) {
+        resolve(null);
+        return;
+      }
+      const options = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port || (isHttps ? 443 : 80),
+        path: parsedUrl.pathname + parsedUrl.search,
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${this.config.apiKey}`,
+          "Accept": "application/json"
+        },
+        timeout: this.config.timeout
+      };
+      const req = requestFn(options, (res) => {
+        let data = "";
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+        res.on("end", () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(data));
+            } catch {
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
+        });
+      });
+      req.on("error", () => resolve(null));
+      req.on("timeout", () => {
+        req.destroy();
+        resolve(null);
+      });
+      req.end();
+    });
+  }
 };
 var instance = null;
 function init(config) {
@@ -584,6 +678,126 @@ function unpatchFetch() {
   isPatched = false;
   console.log("[OutboundIQ] Fetch restored");
 }
+
+// src/intelligence.ts
+var originalFetch3 = globalThis.fetch;
+function getBaseUrl() {
+  const client = getClient();
+  if (client) {
+    return client.getEndpoint().replace("/api/metric", "/api");
+  }
+  const endpoint = process.env.OUTBOUNDIQ_ENDPOINT || "https://agent.outboundiq.dev/api/metric";
+  return endpoint.replace("/api/metric", "/api");
+}
+function getApiKey() {
+  const client = getClient();
+  if (client) {
+    return client.getApiKey();
+  }
+  return process.env.OUTBOUNDIQ_API_KEY;
+}
+async function recommend(serviceName, options = {}) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for recommend()");
+    return null;
+  }
+  try {
+    const url = `${getBaseUrl()}/v1/recommend/${encodeURIComponent(serviceName)}`;
+    const headers = {
+      "Authorization": `Bearer ${apiKey}`,
+      "Accept": "application/json"
+    };
+    if (options.userContext) {
+      headers["X-User-Context"] = JSON.stringify(options.userContext);
+    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), options.timeout || 5e3);
+    const response = await originalFetch3(url, {
+      method: "GET",
+      headers,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const data = await response.json();
+    return { success: response.ok, ...data };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error("[OutboundIQ] recommend() timeout");
+      return { success: false, error: "Request timeout" };
+    }
+    console.error("[OutboundIQ] recommend() failed:", error);
+    return { success: false, error: error.message };
+  }
+}
+async function providerStatus(providerSlug, options = {}) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for providerStatus()");
+    return null;
+  }
+  try {
+    const url = `${getBaseUrl()}/v1/provider/${encodeURIComponent(providerSlug)}/status`;
+    const headers = {
+      "Authorization": `Bearer ${apiKey}`,
+      "Accept": "application/json"
+    };
+    if (options.userContext) {
+      headers["X-User-Context"] = JSON.stringify(options.userContext);
+    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), options.timeout || 5e3);
+    const response = await originalFetch3(url, {
+      method: "GET",
+      headers,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const data = await response.json();
+    return { success: response.ok, ...data };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error("[OutboundIQ] providerStatus() timeout");
+      return { success: false, error: "Request timeout" };
+    }
+    console.error("[OutboundIQ] providerStatus() failed:", error);
+    return { success: false, error: error.message };
+  }
+}
+async function endpointStatus(endpointSlug, options = {}) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for endpointStatus()");
+    return null;
+  }
+  try {
+    const url = `${getBaseUrl()}/v1/endpoint/${encodeURIComponent(endpointSlug)}/status`;
+    const headers = {
+      "Authorization": `Bearer ${apiKey}`,
+      "Accept": "application/json"
+    };
+    if (options.userContext) {
+      headers["X-User-Context"] = JSON.stringify(options.userContext);
+    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), options.timeout || 5e3);
+    const response = await originalFetch3(url, {
+      method: "GET",
+      headers,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const data = await response.json();
+    return { success: response.ok, ...data };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error("[OutboundIQ] endpointStatus() timeout");
+      return { success: false, error: "Request timeout" };
+    }
+    console.error("[OutboundIQ] endpointStatus() failed:", error);
+    return { success: false, error: error.message };
+  }
+}
 var require2 = module$1.createRequire((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('node.js', document.baseURI).href)));
 var http = require2("http");
 var https = require2("https");
@@ -754,6 +968,7 @@ function registerFromEnv() {
 }
 
 exports.OutboundIQClient = OutboundIQClient;
+exports.endpointStatus = endpointStatus;
 exports.flush = flush;
 exports.generateId = generateId;
 exports.getClient = getClient;
@@ -761,6 +976,8 @@ exports.init = init;
 exports.parseUrl = parseUrl;
 exports.patchFetch = patchFetch;
 exports.patchNodeHttp = patchNodeHttp;
+exports.providerStatus = providerStatus;
+exports.recommend = recommend;
 exports.register = register;
 exports.registerFromEnv = registerFromEnv;
 exports.safeStringify = safeStringify;
