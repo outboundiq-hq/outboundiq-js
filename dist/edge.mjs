@@ -612,7 +612,7 @@ function register(config) {
   patchFetch();
 }
 function registerFromEnv() {
-  const apiKey = process.env.OUTBOUNDIQ_API_KEY;
+  const apiKey = process.env.OUTBOUNDIQ_KEY;
   const projectId = process.env.OUTBOUNDIQ_PROJECT_ID;
   if (!apiKey || !projectId) {
     console.warn("[OutboundIQ] Missing environment variables");

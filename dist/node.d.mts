@@ -34,7 +34,7 @@ declare function unpatchNodeHttp(): void;
  *
  * // Initialize and start tracking
  * init({
- *   apiKey: process.env.OUTBOUNDIQ_API_KEY!,
+ *   apiKey: process.env.OUTBOUNDIQ_KEY!,
  *   projectId: process.env.OUTBOUNDIQ_PROJECT_ID!,
  * });
  *

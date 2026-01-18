@@ -35,7 +35,7 @@ function getApiKey(): string | undefined {
     return client.getApiKey();
   }
   // Fall back to env var
-  return process.env.OUTBOUNDIQ_API_KEY;
+  return process.env.OUTBOUNDIQ_KEY;
 }
 
 // ============================================================================
@@ -183,7 +183,7 @@ export async function recommend(
   const apiKey = getApiKey();
   
   if (!apiKey) {
-    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for recommend()');
+    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_KEY for recommend()');
     return null;
   }
 
@@ -251,7 +251,7 @@ export async function providerStatus(
   const apiKey = getApiKey();
   
   if (!apiKey) {
-    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for providerStatus()');
+    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_KEY for providerStatus()');
     return null;
   }
 
@@ -320,7 +320,7 @@ export async function endpointStatus(
   const apiKey = getApiKey();
   
   if (!apiKey) {
-    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for endpointStatus()');
+    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_KEY for endpointStatus()');
     return null;
   }
 

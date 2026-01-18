@@ -11,7 +11,7 @@
  * 
  * // Initialize and start tracking
  * init({
- *   apiKey: process.env.OUTBOUNDIQ_API_KEY!,
+ *   apiKey: process.env.OUTBOUNDIQ_KEY!,
  *   projectId: process.env.OUTBOUNDIQ_PROJECT_ID!,
  * });
  * 
@@ -65,7 +65,7 @@ export function register(config?: OutboundIQConfig): void {
  * Initialize from environment variables and register
  */
 export function registerFromEnv(): void {
-  const apiKey = process.env.OUTBOUNDIQ_API_KEY;
+  const apiKey = process.env.OUTBOUNDIQ_KEY;
   const projectId = process.env.OUTBOUNDIQ_PROJECT_ID;
   
   if (!apiKey || !projectId) {

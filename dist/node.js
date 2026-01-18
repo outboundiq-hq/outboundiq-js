@@ -694,12 +694,12 @@ function getApiKey() {
   if (client) {
     return client.getApiKey();
   }
-  return process.env.OUTBOUNDIQ_API_KEY;
+  return process.env.OUTBOUNDIQ_KEY;
 }
 async function recommend(serviceName, options = {}) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for recommend()");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY for recommend()");
     return null;
   }
   try {
@@ -733,7 +733,7 @@ async function recommend(serviceName, options = {}) {
 async function providerStatus(providerSlug, options = {}) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for providerStatus()");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY for providerStatus()");
     return null;
   }
   try {
@@ -767,7 +767,7 @@ async function providerStatus(providerSlug, options = {}) {
 async function endpointStatus(endpointSlug, options = {}) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for endpointStatus()");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY for endpointStatus()");
     return null;
   }
   try {
@@ -953,10 +953,10 @@ function register(config) {
   patchFetch();
 }
 function registerFromEnv() {
-  const apiKey = process.env.OUTBOUNDIQ_API_KEY;
+  const apiKey = process.env.OUTBOUNDIQ_KEY;
   const projectId = process.env.OUTBOUNDIQ_PROJECT_ID;
   if (!apiKey || !projectId) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY or OUTBOUNDIQ_PROJECT_ID environment variables");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY or OUTBOUNDIQ_PROJECT_ID environment variables");
     return;
   }
   register({

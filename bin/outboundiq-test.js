@@ -12,14 +12,14 @@ const https = require('https');
 const http = require('http');
 
 // Get API key from environment
-const apiKey = process.env.OUTBOUNDIQ_API_KEY;
+const apiKey = process.env.OUTBOUNDIQ_KEY;
 const endpoint = process.env.OUTBOUNDIQ_ENDPOINT || 'https://agent.outboundiq.dev/api/metric';
 const baseUrl = endpoint.replace('/metric', '');
 
 if (!apiKey) {
-    console.error('\x1b[31m✗ Error: OUTBOUNDIQ_API_KEY environment variable is not set\x1b[0m');
+    console.error('\x1b[31m✗ Error: OUTBOUNDIQ_KEY environment variable is not set\x1b[0m');
     console.log('\nPlease set your API key:');
-    console.log('  export OUTBOUNDIQ_API_KEY=your_api_key_here\n');
+    console.log('  export OUTBOUNDIQ_KEY=your_api_key_here\n');
     process.exit(1);
 }
 

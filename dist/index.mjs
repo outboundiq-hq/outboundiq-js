@@ -687,12 +687,12 @@ function getApiKey() {
   if (client) {
     return client.getApiKey();
   }
-  return process.env.OUTBOUNDIQ_API_KEY;
+  return process.env.OUTBOUNDIQ_KEY;
 }
 async function recommend(serviceName, options = {}) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for recommend()");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY for recommend()");
     return null;
   }
   try {
@@ -726,7 +726,7 @@ async function recommend(serviceName, options = {}) {
 async function providerStatus(providerSlug, options = {}) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for providerStatus()");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY for providerStatus()");
     return null;
   }
   try {
@@ -760,7 +760,7 @@ async function providerStatus(providerSlug, options = {}) {
 async function endpointStatus(endpointSlug, options = {}) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_API_KEY for endpointStatus()");
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY for endpointStatus()");
     return null;
   }
   try {
