@@ -21,7 +21,7 @@ function getBaseUrl(): string {
     return client.getEndpoint().replace('/api/metric', '/api');
   }
   // Fall back to env var
-  const endpoint = process.env.OUTBOUNDIQ_ENDPOINT || 'https://agent.outboundiq.dev/api/metric';
+  const endpoint = process.env.OUTBOUNDIQ_URL || 'https://agent.outboundiq.dev/api/metric';
   return endpoint.replace('/api/metric', '/api');
 }
 

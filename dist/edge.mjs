@@ -621,7 +621,7 @@ function registerFromEnv() {
   register({
     apiKey,
     projectId,
-    endpoint: process.env.OUTBOUNDIQ_ENDPOINT,
+    endpoint: process.env.OUTBOUNDIQ_URL,
     debug: process.env.OUTBOUNDIQ_DEBUG === "true"
   });
 }

@@ -13,7 +13,7 @@ const http = require('http');
 
 // Get API key from environment
 const apiKey = process.env.OUTBOUNDIQ_KEY;
-const endpoint = process.env.OUTBOUNDIQ_ENDPOINT || 'https://agent.outboundiq.dev/api/metric';
+const endpoint = process.env.OUTBOUNDIQ_URL || 'https://agent.outboundiq.dev/api/metric';
 const baseUrl = endpoint.replace('/metric', '');
 
 if (!apiKey) {
