@@ -1,5 +1,5 @@
 {
-  "name": "@outboundiq/core",
+  "name": "@outbound_iq/core",
   "version": "0.1.0",
   "description": "OutboundIQ JavaScript SDK - Track and monitor your outbound API calls",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     }
   },
   "bin": {
-    "outboundiq-test": "./bin/outboundiq-test.js"
+    "outboundiq-test": "bin/outboundiq-test.js"
   },
   "files": [
     "dist",
@@ -51,7 +51,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/outboundiq-hq/outboundiq-js.git"
+    "url": "git+https://github.com/outboundiq-hq/outboundiq-js.git"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -65,4 +65,3 @@
   "peerDependencies": {},
   "dependencies": {}
 }
-
