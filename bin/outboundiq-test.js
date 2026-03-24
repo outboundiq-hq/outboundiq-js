@@ -6,20 +6,83 @@
  * Verifies your API key and sends test data to OutboundIQ.
  * 
  * Usage: npx outboundiq-test
+ *
+ * Loads `.env` then `.env.local` from the current working directory, walking
+ * up until a directory contains either file (same idea as a project root).
+ * Existing shell environment variables are never overwritten.
  */
 
 const https = require('https');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
-// Get API key from environment
+/**
+ * @param {string} filePath
+ * @returns {Record<string, string>}
+ */
+function parseEnvFile(filePath) {
+    const out = {};
+    let raw;
+    try {
+        raw = fs.readFileSync(filePath, 'utf8');
+    } catch {
+        return out;
+    }
+    for (const line of raw.split(/\r?\n/)) {
+        const t = line.trim();
+        if (!t || t.startsWith('#')) continue;
+        const eq = t.indexOf('=');
+        if (eq === -1) continue;
+        const key = t.slice(0, eq).trim();
+        if (!key) continue;
+        let val = t.slice(eq + 1).trim();
+        if (
+            (val.startsWith('"') && val.endsWith('"')) ||
+            (val.startsWith("'") && val.endsWith("'"))
+        ) {
+            val = val.slice(1, -1);
+        }
+        out[key] = val;
+    }
+    return out;
+}
+
+function loadDotenvFiles() {
+    let dir = process.cwd();
+    for (;;) {
+        const envPath = path.join(dir, '.env');
+        const localPath = path.join(dir, '.env.local');
+        const hasEnv = fs.existsSync(envPath);
+        const hasLocal = fs.existsSync(localPath);
+        if (hasEnv || hasLocal) {
+            /** @type {Record<string, string>} */
+            let merged = {};
+            if (hasEnv) merged = { ...merged, ...parseEnvFile(envPath) };
+            if (hasLocal) merged = { ...merged, ...parseEnvFile(localPath) };
+            for (const [k, v] of Object.entries(merged)) {
+                if (process.env[k] === undefined) process.env[k] = v;
+            }
+            return;
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+    }
+}
+
+loadDotenvFiles();
+
+// Get API key from environment (after optional .env load)
 const apiKey = process.env.OUTBOUNDIQ_KEY;
 const endpoint = process.env.OUTBOUNDIQ_URL || 'https://agent.outboundiq.dev/api/metric';
 const baseUrl = endpoint.replace('/metric', '');
 
 if (!apiKey) {
     console.error('\x1b[31m✗ Error: OUTBOUNDIQ_KEY environment variable is not set\x1b[0m');
-    console.log('\nPlease set your API key:');
-    console.log('  export OUTBOUNDIQ_KEY=your_api_key_here\n');
+    console.log('\nFix one of the following:');
+    console.log('  • Add OUTBOUNDIQ_KEY to .env or .env.local in your project root, then run this from that folder.');
+    console.log('  • Or export it in your shell:  export OUTBOUNDIQ_KEY=your_api_key_here\n');
     process.exit(1);
 }
 

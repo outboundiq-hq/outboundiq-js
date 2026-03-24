@@ -1,6 +1,6 @@
 {
   "name": "@outbound_iq/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OutboundIQ JavaScript SDK - Track and monitor your outbound API calls",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
