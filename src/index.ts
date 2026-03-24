@@ -10,7 +10,6 @@
  * // Initialize the client
  * init({
  *   apiKey: process.env.OUTBOUNDIQ_KEY!,
- *   projectId: process.env.OUTBOUNDIQ_PROJECT_ID!,
  * });
  * 
  * // Track an API call manually

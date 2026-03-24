@@ -945,23 +945,44 @@ var require3 = module$1.createRequire((typeof document === 'undefined' ? require
 var originalHttpModule = require3("http");
 var originalHttpsModule = require3("https");
 setNativeHttp(originalHttpModule, originalHttpsModule);
+var processHooksRegistered = false;
+function registerProcessHooks() {
+  if (processHooksRegistered || typeof process === "undefined") {
+    return;
+  }
+  process.once("beforeExit", () => {
+    const client = getClient();
+    if (client && client.getPendingCount() > 0) {
+      void shutdown();
+    }
+  });
+  const shutdownOnSignal = () => {
+    const client = getClient();
+    if (!client || client.getPendingCount() === 0) {
+      return;
+    }
+    void shutdown();
+  };
+  process.once("SIGINT", shutdownOnSignal);
+  process.once("SIGTERM", shutdownOnSignal);
+  processHooksRegistered = true;
+}
 function register(config) {
   if (config) {
     init(config);
   }
   patchNodeHttp();
   patchFetch();
+  registerProcessHooks();
 }
 function registerFromEnv() {
   const apiKey = process.env.OUTBOUNDIQ_KEY;
-  const projectId = process.env.OUTBOUNDIQ_PROJECT_ID;
-  if (!apiKey || !projectId) {
-    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY or OUTBOUNDIQ_PROJECT_ID environment variables");
+  if (!apiKey) {
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY environment variable");
     return;
   }
   register({
     apiKey,
-    projectId,
     endpoint: process.env.OUTBOUNDIQ_URL,
     debug: process.env.OUTBOUNDIQ_DEBUG === "true"
   });

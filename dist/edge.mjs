@@ -613,14 +613,12 @@ function register(config) {
 }
 function registerFromEnv() {
   const apiKey = process.env.OUTBOUNDIQ_KEY;
-  const projectId = process.env.OUTBOUNDIQ_PROJECT_ID;
-  if (!apiKey || !projectId) {
-    console.warn("[OutboundIQ] Missing environment variables");
+  if (!apiKey) {
+    console.warn("[OutboundIQ] Missing OUTBOUNDIQ_KEY environment variable");
     return;
   }
   register({
     apiKey,
-    projectId,
     endpoint: process.env.OUTBOUNDIQ_URL,
     debug: process.env.OUTBOUNDIQ_DEBUG === "true"
   });

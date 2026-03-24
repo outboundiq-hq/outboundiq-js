@@ -10,7 +10,6 @@
  * // Initialize and start tracking
  * init({
  *   apiKey: process.env.OUTBOUNDIQ_KEY!,
- *   projectId: process.env.OUTBOUNDIQ_PROJECT_ID!,
  * });
  * 
  * // Patch http/https to track all requests
@@ -43,10 +42,40 @@ export {
 import { init as baseInit, setNativeHttp, type OutboundIQConfig } from './client/OutboundIQClient';
 import { patchNodeHttp } from './interceptors/node';
 import { patchFetch } from './interceptors/fetch';
+import { getClient, shutdown } from './client/OutboundIQClient';
 
 // Set the native http/https modules BEFORE any patching
 // This ensures the SDK can send metrics using the unpatched modules
 setNativeHttp(originalHttpModule, originalHttpsModule);
+
+let processHooksRegistered = false;
+
+function registerProcessHooks(): void {
+  if (processHooksRegistered || typeof process === 'undefined') {
+    return;
+  }
+
+  process.once('beforeExit', () => {
+    const client = getClient();
+    if (client && client.getPendingCount() > 0) {
+      void shutdown();
+    }
+  });
+
+  // Graceful shutdown on termination signals.
+  const shutdownOnSignal = () => {
+    const client = getClient();
+    if (!client || client.getPendingCount() === 0) {
+      return;
+    }
+
+    void shutdown();
+  };
+
+  process.once('SIGINT', shutdownOnSignal);
+  process.once('SIGTERM', shutdownOnSignal);
+  processHooksRegistered = true;
+}
 
 /**
  * Initialize OutboundIQ and patch all HTTP methods
@@ -60,6 +89,7 @@ export function register(config?: OutboundIQConfig): void {
   // Patch both native http/https and fetch
   patchNodeHttp();
   patchFetch();
+  registerProcessHooks();
 }
 
 /**
@@ -68,16 +98,14 @@ export function register(config?: OutboundIQConfig): void {
  */
 export function registerFromEnv(): void {
   const apiKey = process.env.OUTBOUNDIQ_KEY;
-  const projectId = process.env.OUTBOUNDIQ_PROJECT_ID;
   
-  if (!apiKey || !projectId) {
-    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_KEY or OUTBOUNDIQ_PROJECT_ID environment variables');
+  if (!apiKey) {
+    console.warn('[OutboundIQ] Missing OUTBOUNDIQ_KEY environment variable');
     return;
   }
 
   register({
     apiKey,
-    projectId,
     endpoint: process.env.OUTBOUNDIQ_URL,
     debug: process.env.OUTBOUNDIQ_DEBUG === 'true',
   });

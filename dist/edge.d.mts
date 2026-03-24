@@ -15,7 +15,6 @@ export { A as ApiCall, a as OutboundIQClient, U as UserContext, f as flush, g as
  * // Initialize and start tracking
  * init({
  *   apiKey: process.env.OUTBOUNDIQ_KEY!,
- *   projectId: process.env.OUTBOUNDIQ_PROJECT_ID!,
  * });
  *
  * register();
